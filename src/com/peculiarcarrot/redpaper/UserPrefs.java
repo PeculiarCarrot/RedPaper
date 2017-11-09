@@ -82,6 +82,11 @@ public class UserPrefs {
 	 * Whether or not NSFW images will be allowed as a wallpaper
 	 */
 	public boolean allowNSFW = false;
+
+	/**
+	 * This device's ID
+	 */
+	public String deviceID;
 	
 	/**
 	 * @return True if there is a file with the preferences saved.
@@ -109,6 +114,7 @@ public class UserPrefs {
 			obj.put("minHeight", minHeight);
 			obj.put("maxStoredImages", maxStoredImages);
 			obj.put("allowNSFW", allowNSFW);
+			obj.put("deviceID", deviceID);
 			
 			JSONArray srs = new JSONArray();
 			for(String s: subreddits)
@@ -163,6 +169,9 @@ public class UserPrefs {
 				 break;
 			 case "allowNSFW":
 				 allowNSFW = (boolean)obj.get("allowNSFW");
+				 break;
+			 case "deviceID":
+				 deviceID = (String)obj.get("deviceID");
 				 break;
 			 }
 		 }

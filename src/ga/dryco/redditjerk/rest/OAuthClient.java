@@ -71,6 +71,16 @@ public final class OAuthClient {
 
     }
 
+
+	public AuthInfo AuthenticateApp(String clientID, String deviceID) {
+		 if(this.authInfo == null){
+	            this.authInfo = new AuthInfo(clientID, deviceID);
+	            this.OAuthAppAuthenitcation();
+	        } else this.renewAccessToken();
+
+	        return this.authInfo;
+	}
+
     private void OAuthAuthenitcation() {
         if(this.authInfo == null){
             throw new OAuthClientException("No Authentication info present");
@@ -80,7 +90,44 @@ public final class OAuthClient {
         this.authInfo.setTimeAquired(Instant.now().getEpochSecond());
     }
 
+    private void OAuthAppAuthenitcation() {
+        if(this.authInfo == null){
+            throw new OAuthClientException("No Authentication info present");
+        }
 
+        this.authData = getAppAccessTokenJson();
+        this.authInfo.setTimeAquired(Instant.now().getEpochSecond());
+    }
+
+    private AuthData getAppAccessTokenJson() {
+        CredentialsProvider provider = new BasicCredentialsProvider();
+        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(authInfo.getClientId(), "");
+        provider.setCredentials(AuthScope.ANY, credentials);
+        this.postClient = HttpClientBuilder.create().setDefaultCredentialsProvider(provider).setUserAgent(this.userAgent).build();
+        
+        List<NameValuePair> urlParameters = new ArrayList<>();
+        urlParameters.add(new BasicNameValuePair("grant_type", "https://oauth.reddit.com/grants/installed_client"));
+        urlParameters.add(new BasicNameValuePair("device_id", authInfo.getUsername()));
+
+        Gson gson = new Gson();
+
+        HttpPost post = new HttpPost("https://www.reddit.com/api/v1/access_token");
+
+        try {
+            post.setEntity(new UrlEncodedFormEntity(urlParameters));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        HttpResponse response;
+        try {
+            response = this.postClient.execute(post);
+        } catch (IOException e) {
+            throw new OAuthClientException("Oath getAccessToken Error" , e);
+        }
+        return gson.fromJson(this.responseReader(response), AuthData.class);
+
+    }
 
 
 

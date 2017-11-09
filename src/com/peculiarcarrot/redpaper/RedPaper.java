@@ -15,10 +15,10 @@ import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
 
-import ga.dryco.redditjerk.api.Reddit;
 import ga.dryco.redditjerk.exceptions.OAuthClientException;
 import ga.dryco.redditjerk.implementation.RedditApi;
 import ga.dryco.redditjerk.wrappers.Link;
+import ga.dryco.redditjerk.wrappers.User;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -49,7 +49,7 @@ public class RedPaper{
 	/**
 	 * You know, the Reddit instance.
 	 */
-	Reddit red;
+	RedditApi red;
 	/**
 	 * The images in queue for us to use
 	 */
@@ -64,7 +64,7 @@ public class RedPaper{
 	
 	public static String programName="RedPaper";
 	
-	public String userAgent = "windows:com.peculiarcarrot.redpaper" + programName.toLowerCase() + ":v1.0.0 (by /u/peculiarcarrot)";
+	public String userAgent = "windows:com.peculiarcarrot.redpaper." + programName.toLowerCase() + ":v1.0.0 (by /u/peculiarcarrot)";
 	public boolean shouldTryGettingImages = true;
 	public boolean isConnected = true;
 	
@@ -96,7 +96,10 @@ public class RedPaper{
 			if(userPrefs.preferencesExist())
 				userPrefs.load();
 		}
+		if(userPrefs.deviceID == null)
+			userPrefs.deviceID = new RandomString(25).nextString();
 		userPrefs.save();
+		red.loginApp("MEj48WB7OhI7DQ", userPrefs.deviceID);
 	}
 	
 	/**

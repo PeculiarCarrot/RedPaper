@@ -104,6 +104,13 @@ public final class RedditApi implements Reddit {
 
         return this.me();
     }
+    
+    public User loginApp(String clientID, String deviceID) {
+        this.ApiURL = ConfigValues.OAUTH_URL.toString();
+        client.AuthenticateApp(clientID, deviceID);
+
+        return this.me();
+    }
 
     /**
      *

@@ -18,6 +18,11 @@ public class AuthInfo implements Serializable{
         this.secret = secret;
     }
 
+    public AuthInfo(String clientID, String deviceID){
+        this.username = deviceID;
+        this.clientId = clientID;
+    }
+
     public long getTimeAquired() {
         return timeAquired;
     }
