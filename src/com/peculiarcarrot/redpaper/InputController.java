@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -11,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
@@ -19,6 +21,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.paint.Color;
 import mslinks.ShellLink;
 
 public class InputController{
@@ -31,6 +34,8 @@ public class InputController{
     private CheckBox nsfw;
     @FXML
     private CheckBox startup;
+    @FXML
+    private CheckBox useOlderImages;
     @FXML
     private Button addSubButton;
     @FXML
@@ -51,6 +56,8 @@ public class InputController{
     private TextField minHeightField;
     @FXML
     private Slider numStoredImages;
+    @FXML
+    private Label connectIndicator;
     
     private RedPaper redPaper;
 	
@@ -76,6 +83,18 @@ public class InputController{
 		makeTextFieldNumeric(minWidthField);
 		makeTextFieldNumeric(minHeightField);
 	}
+    
+    public void changeConnectIndicator(boolean connected)
+    {
+    	connectIndicator.setTextFill(connected ? Color.FORESTGREEN : Color.DARKRED);
+    	Platform.runLater(new Runnable()
+    	{
+        	public void run()
+        	{
+        		connectIndicator.setText(connected ? "Online" : "Offline");
+        	}
+    	});
+    }
     
     private void makeSliderMinOne(Slider slider)
     {
@@ -155,6 +174,7 @@ public class InputController{
     	redPaper.userPrefs.numTop = (int)numTopPosts.getValue();
     	redPaper.userPrefs.updateHours = (int)hoursPerUpdate.getValue();
     	redPaper.userPrefs.changeMins = (int)minutesPerChange.getValue();
+    	redPaper.userPrefs.useOlderImages = useOlderImages.isSelected();
     	
     	String[] subs = new String[subredditList.getItems().size()];
     	for(int i = 0; i < subs.length; i++)
@@ -181,6 +201,7 @@ public class InputController{
 
     private void setFields() {
 		nsfw.setSelected(redPaper.userPrefs.allowNSFW);
+		useOlderImages.setSelected(redPaper.userPrefs.useOlderImages);
 		minHeightField.setText("" + redPaper.userPrefs.minHeight);
 		minWidthField.setText("" + redPaper.userPrefs.minWidth);
 		numStoredImages.setValue(redPaper.userPrefs.maxStoredImages);

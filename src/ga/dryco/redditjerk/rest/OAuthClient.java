@@ -72,8 +72,8 @@ public final class OAuthClient {
     }
 
 
-	public AuthInfo AuthenticateApp(String clientID, String deviceID) {
-		 if(this.authInfo == null){
+	public AuthInfo AuthenticateApp(String clientID, String deviceID, boolean online) {
+		 if(this.authInfo == null || !online){
 	            this.authInfo = new AuthInfo(clientID, deviceID);
 	            this.OAuthAppAuthenitcation();
 	        } else this.renewAccessToken();

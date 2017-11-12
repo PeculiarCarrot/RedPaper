@@ -105,9 +105,9 @@ public final class RedditApi implements Reddit {
         return this.me();
     }
     
-    public User loginApp(String clientID, String deviceID) {
+    public User loginApp(String clientID, String deviceID, boolean online) {
         this.ApiURL = ConfigValues.OAUTH_URL.toString();
-        client.AuthenticateApp(clientID, deviceID);
+        client.AuthenticateApp(clientID, deviceID, online);
 
         return this.me();
     }
@@ -898,6 +898,7 @@ public final class RedditApi implements Reddit {
         try{
             parser.parse(json);
         }catch (com.google.gson.JsonSyntaxException ex){
+            System.out.println(json);
             throw new RedditJerkException("Server response is not a valid JSON");
         }
 

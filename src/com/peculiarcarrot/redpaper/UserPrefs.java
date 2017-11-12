@@ -82,6 +82,10 @@ public class UserPrefs {
 	 * Whether or not NSFW images will be allowed as a wallpaper
 	 */
 	public boolean allowNSFW = false;
+	/**
+	 * Whether we will use images from past searches
+	 */
+	public boolean useOlderImages = true;
 
 	/**
 	 * This device's ID
@@ -114,6 +118,7 @@ public class UserPrefs {
 			obj.put("minHeight", minHeight);
 			obj.put("maxStoredImages", maxStoredImages);
 			obj.put("allowNSFW", allowNSFW);
+			obj.put("useOlderImages", useOlderImages);
 			obj.put("deviceID", deviceID);
 			
 			JSONArray srs = new JSONArray();
@@ -169,6 +174,9 @@ public class UserPrefs {
 				 break;
 			 case "allowNSFW":
 				 allowNSFW = (boolean)obj.get("allowNSFW");
+				 break;
+			 case "useOlderImages":
+				 useOlderImages = (boolean)obj.get("useOlderImages");
 				 break;
 			 case "deviceID":
 				 deviceID = (String)obj.get("deviceID");

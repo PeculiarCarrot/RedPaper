@@ -8,9 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -19,7 +16,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import mslinks.ShellLink;
 
 
 public class Main extends Application {
@@ -27,23 +23,22 @@ public class Main extends Application {
 	private RedPaper redPaper;
 	private InputController inputController;
 	
-	//TODO: add an option to start on startup
-	//TODO: 
+	public String version = "1.0.0";
 	
 	@Override
 	public void start(Stage stage) {
 		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("./RedPaperScene.fxml"));
+			FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("RedPaperScene.fxml"));
 			Parent root = loader.load();
 			inputController = loader.<InputController>getController();
 			Scene scene = new Scene(root, 600, 450);
 			
 			stage.setResizable(false);
 			stage.getIcons().add(new Image(Main.class.getResourceAsStream("/windowIcon.png")));
-	        stage.setTitle("RedPaper");
+	        stage.setTitle("RedPaper v"+version);
 			stage.setScene(scene);
 			
-			redPaper = new RedPaper();
+			redPaper = new RedPaper(inputController);
 			redPaper.initializePrefs();
 			inputController.setRedPaper(redPaper);
 			Platform.setImplicitExit(false);

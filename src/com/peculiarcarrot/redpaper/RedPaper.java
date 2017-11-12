@@ -16,9 +16,9 @@ import java.util.TimerTask;
 import javax.imageio.ImageIO;
 
 import ga.dryco.redditjerk.exceptions.OAuthClientException;
+import ga.dryco.redditjerk.exceptions.RedditJerkException;
 import ga.dryco.redditjerk.implementation.RedditApi;
 import ga.dryco.redditjerk.wrappers.Link;
-import ga.dryco.redditjerk.wrappers.User;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -76,6 +76,12 @@ public class RedPaper{
 	
 	public boolean queueImageUpdate;
 	
+	private InputController inputController;
+	
+	public RedPaper(InputController inputController) {
+		this.inputController = inputController;
+	}
+
 	/**
 	 * Loads the preferences from disk, or saves default prefs if none exist
 	 */
@@ -99,7 +105,7 @@ public class RedPaper{
 		if(userPrefs.deviceID == null)
 			userPrefs.deviceID = new RandomString(25).nextString();
 		userPrefs.save();
-		red.loginApp("MEj48WB7OhI7DQ", userPrefs.deviceID);
+		login();
 	}
 	
 	/**
@@ -126,12 +132,17 @@ public class RedPaper{
 			shouldTryGettingImages = false;
 		}
 		//System.out.println("--------------------------"+queuedImages.size());
-		if(shouldTryGettingImages && queuedImages.size() > 0)
+		if(queuedImages.size() > 0)
 		{
 			for(int i = 0; i < queuedImages.size(); i++)
 			 {
 				//Load the image. If it loads correctly and fits the size requirements in userprefs, we change the wallpaper
-				 String path = saveImage(queuedImages.get(i).link,queuedImages.get(i).redditID);
+				 String path = null;
+				 if(queuedImages.get(i).file == null)
+					 path = saveImage(queuedImages.get(i).link,queuedImages.get(i).redditID);
+				 else if(queuedImages.get(i).file.exists())
+					 path = queuedImages.get(i).file.getAbsolutePath();
+				 
 				 if(i == queuedImages.size() - 1)
 					 i =- 1;
 				 //System.out.println(path != null);
@@ -149,33 +160,34 @@ public class RedPaper{
 					e.printStackTrace();
 				}
 				 if(paused)
-				 {
 					 i--;
-					 continue;
-				 }
+				 
 				 //If it's time to update the queue from Reddit, do it
 				 if(System.currentTimeMillis() > startTime + 1000 * 60 * 60 * userPrefs.updateHours * updates || queueImageUpdate)
 				 {
 					 queueImageUpdate = true;
-					 if(allowDownloading)
+					 if(allowDownloading && isConnected)
 						 updateImages();
 					 break;
 				 }
 				 //While the number of files in the path is greater than the number set in userprefs, delete the oldest one.
-				 File dir = new File(imageSavePath);
-				 while(dir.listFiles().length > userPrefs.maxStoredImages)
+				 if(queuedImages.get(i).file == null)
 				 {
-					 long oldest=0;
-					 File old = null;
-					 for(File file: dir.listFiles()) 
+					 File dir = new File(imageSavePath);
+					 while(dir.listFiles().length > userPrefs.maxStoredImages)
 					 {
-						 if(old == null || file.lastModified() < oldest)
+						 long oldest=0;
+						 File old = null;
+						 for(File file: dir.listFiles()) 
 						 {
-							 oldest = file.lastModified();
-							 old = file;
+							 if(old == null || file.lastModified() < oldest)
+							 {
+								 oldest = file.lastModified();
+								 old = file;
+							 }
 						 }
+						 old.delete();
 					 }
-					 old.delete();
 				 }
 			 }
 			iterateThroughImages();
@@ -187,6 +199,25 @@ public class RedPaper{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	private void setConnected(boolean connected)
+	{
+		this.isConnected = connected;
+		inputController.changeConnectIndicator(connected);
+	}
+	
+	private void login()
+	{
+		try{
+			red.loginApp("MEj48WB7OhI7DQ", userPrefs.deviceID, isConnected);
+			setConnected(true);
+			if(connectTimer != null)
+				connectTimer.cancel();
+		}
+		catch(OAuthClientException e)
+		{
 		}
 	}
 	
@@ -202,6 +233,14 @@ public class RedPaper{
 			//frame.setTitle(trayIcon.getToolTip());
 			updates++;
 			queuedImages.clear();
+			
+			try {
+				if(!isConnected)
+					login();
+			}
+			catch(Exception e)
+			{
+			}
 			
 			//Get the top images from the given subreddits. We determine if the given post is an image by looking for ".jpg" or ".png" in the link URL.
 			//Won't use NSFW images unless the user preferences are changed.
@@ -219,10 +258,6 @@ public class RedPaper{
 			 }
 			//trayIcon.setToolTip(programName);
 			//frame.setTitle(programName+" Settings");
-			isConnected = true;
-			Collections.shuffle(queuedImages);
-			if(connectTimer != null)
-				connectTimer.cancel();
 		}
 		catch(OAuthClientException e)
 		{
@@ -230,17 +265,28 @@ public class RedPaper{
 			if(isConnected)
 			{
 				error("Hmm. RedPaper couldn't connect to Reddit. Check your internet connection.");
-				isConnected = false;
+				setConnected(false);
 				connectTimer = new Timer();
 				connectTimer.schedule(new TimerTask()
 				{
 					public void run() {
-						updateImages();
+						if(shouldTryGettingImages && !paused)
+							updateImages();
 					}
 					
 				}, timePerPing, timePerPing);
 			}
 		}
+		if(userPrefs.useOlderImages)
+		{
+			File stored = new File(imageSavePath);
+			File[] images = stored.listFiles();
+			for(File f: images)
+			{
+				queuedImages.add(new QueuedImage(f));
+			}
+		}
+		Collections.shuffle(queuedImages);
 	}
 	
 	public void kill()
